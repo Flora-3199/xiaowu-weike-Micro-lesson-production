@@ -3,13 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PPT 一键生成器 · 小吴老师</title>
-  <meta name="description" content="输入课题自动生成PPT课件。三档品质：一般/标准/高端，支持多学科多风格。">
+  <title>PPT 制作清单生成器 · 小吴老师</title>
+  <meta name="description" content="输入课题自动生成PPT制作清单：每页内容、画面建议、素材关键词、配色方案。三档品质：一般/标准/高端。">
   <link rel="stylesheet" href="../style.css">
-  <!-- PptxGenJS 库：用来生成真正的 .pptx 文件 -->
-  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
   <style>
-    .tool-section { max-width: 760px; margin: 40px auto; }
+    .tool-section { max-width: 800px; margin: 40px auto; }
     .form-card {
       background: var(--white);
       border-radius: var(--radius);
@@ -18,92 +16,111 @@
     }
     .form-group { margin-bottom: 20px; }
     .form-group label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #1a1a2e;
-      font-size: 0.95em;
+      display: block; font-weight: 600; margin-bottom: 6px;
+      color: #1a1a2e; font-size: 0.95em;
     }
     .form-group input, .form-group select {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-size: 0.95em;
-      font-family: inherit;
-      transition: border-color 0.2s;
+      width: 100%; padding: 10px 14px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 0.95em; font-family: inherit; transition: border-color 0.2s;
     }
-    .form-group input:focus, .form-group select:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-    /* 三档按钮选择器 */
     .tier-select { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
     .tier-option { display: none; }
     .tier-label {
-      display: block;
-      text-align: center;
-      padding: 16px 12px;
-      border: 2px solid var(--border);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.2s;
+      display: block; text-align: center; padding: 16px 12px;
+      border: 2px solid var(--border); border-radius: var(--radius-sm);
+      cursor: pointer; transition: all 0.2s;
     }
     .tier-label:hover { border-color: var(--primary); }
     .tier-label h4 { font-size: 1em; margin-bottom: 4px; }
     .tier-label p { font-size: 0.8em; color: var(--text-light); }
-    .tier-option:checked + .tier-label {
-      border-color: var(--primary);
-      background: var(--primary-light);
-    }
+    .tier-option:checked + .tier-label { border-color: var(--primary); background: var(--primary-light); }
 
-    /* 生成按钮 */
     .btn-generate {
-      width: 100%;
-      padding: 14px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-size: 1.05em;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-top: 8px;
+      width: 100%; padding: 14px; background: var(--primary); color: #fff;
+      border: none; border-radius: var(--radius-sm); font-size: 1.05em;
+      font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px;
     }
-    .btn-generate:hover { background: var(--primary-dark); transform: translateY(-1px); }
-    .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-generate:hover { background: var(--primary-dark); }
 
-    /* 预览区 */
-    .preview { margin-top: 24px; display: none; }
-    .preview.show { display: block; }
-    .preview-card {
-      background: var(--white);
-      border-radius: var(--radius);
-      padding: 24px;
-      box-shadow: var(--shadow-md);
-      margin-bottom: 16px;
-    }
-    .preview-card h3 {
-      color: var(--primary);
-      margin-bottom: 12px;
-    }
-    .slide-item {
-      padding: 10px 14px;
-      margin-bottom: 8px;
-      background: var(--bg);
-      border-radius: 6px;
-      border-left: 3px solid var(--primary);
-      font-size: 0.92em;
-    }
-    .slide-item .slide-num { font-weight: 600; color: var(--primary); margin-right: 8px; }
+    /* 清单输出区 */
+    .checklist { margin-top: 24px; display: none; }
+    .checklist.show { display: block; }
 
-    /* 响应式 */
+    .checklist-header {
+      background: var(--white); border-radius: var(--radius); padding: 24px;
+      box-shadow: var(--shadow-md); margin-bottom: 20px;
+    }
+    .checklist-header .meta-row {
+      display: flex; gap: 24px; flex-wrap: wrap; margin-top: 12px;
+      font-size: 0.9em; color: var(--text-light);
+    }
+    .checklist-header .meta-row strong { color: var(--text); }
+
+    .slide-card {
+      background: var(--white); border-radius: var(--radius); padding: 22px 24px;
+      box-shadow: var(--shadow-sm); margin-bottom: 14px;
+      border-left: 4px solid var(--primary); transition: all 0.2s;
+    }
+    .slide-card:hover { box-shadow: var(--shadow-md); }
+    .slide-card.premium { border-left-color: #6B3A0E; }
+    .slide-card.standard { border-left-color: var(--primary); }
+    .slide-card.basic { border-left-color: #ccc; }
+
+    .slide-num {
+      display: inline-block; background: var(--primary); color: #fff;
+      font-size: 0.78em; font-weight: 700; padding: 2px 10px;
+      border-radius: 10px; margin-bottom: 8px;
+    }
+    .premium .slide-num { background: #6B3A0E; }
+    .basic .slide-num { background: #aaa; }
+
+    .slide-title { font-size: 1.1em; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+    .slide-content { font-size: 0.92em; color: var(--text-light); margin-bottom: 10px; }
+
+    .slide-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+    .slide-detail.full { grid-template-columns: 1fr; }
+    .detail-item { font-size: 0.85em; }
+    .detail-item .dt { font-weight: 600; color: var(--text); }
+    .detail-item .dd { color: var(--text-light); margin-left: 4px; }
+
+    .material-tag {
+      display: inline-block; background: #f0f4ff; color: var(--primary);
+      font-size: 0.8em; padding: 1px 8px; border-radius: 4px; margin: 2px 3px;
+    }
+    .premium .material-tag { background: #fff8f0; color: #8B6914; }
+
+    /* 顶部信息bar */
+    .info-bar {
+      display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
+      padding: 12px 16px; background: var(--primary-light); border-radius: var(--radius-sm);
+      font-size: 0.88em;
+    }
+    .info-bar span { font-weight: 500; }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 16px; }
+    .btn-copy, .btn-print {
+      padding: 10px 20px; border-radius: 20px; font-size: 0.9em;
+      font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-copy { background: var(--primary); color: #fff; border: none; }
+    .btn-copy:hover { background: var(--primary-dark); }
+    .btn-print { background: var(--white); color: var(--primary); border: 1.5px solid var(--primary); }
+    .btn-print:hover { background: var(--primary-light); }
+
+    .checklist-footer {
+      background: var(--white); border-radius: var(--radius); padding: 20px 24px;
+      box-shadow: var(--shadow-sm); margin-top: 20px; font-size: 0.9em;
+    }
+    .checklist-footer h4 { margin-bottom: 8px; color: #1a1a2e; }
+
     @media (max-width: 600px) {
       .form-row { grid-template-columns: 1fr; }
       .tier-select { grid-template-columns: 1fr; }
+      .slide-detail { grid-template-columns: 1fr; }
       .form-card { padding: 20px; }
     }
   </style>
@@ -124,11 +141,10 @@
 
   <main class="container">
     <div class="tool-section">
-      <h1 style="margin-bottom:8px;">📊 PPT 一键生成器</h1>
-      <p style="color:var(--text-light);margin-bottom:28px;">填参数 → 生成大纲 → 下载 .pptx 文件，在 PowerPoint 里微调就能用</p>
+      <h1 style="margin-bottom:4px;">📊 PPT 制作清单生成器</h1>
+      <p style="color:var(--text-light);margin-bottom:28px;">输入课题 → 生成每一页的详细制作清单。照着做，不用想"这页放什么"。</p>
 
       <div class="form-card">
-        <!-- 课题信息 -->
         <div class="form-row">
           <div class="form-group">
             <label>学科</label>
@@ -159,7 +175,7 @@
           <div class="form-group">
             <label>页数</label>
             <select id="slideCount">
-              <option>8</option><option>10</option><option>12</option><option>15</option><option>20</option>
+              <option>8</option><option>10</option><option>12</option><option>15</option>
             </select>
           </div>
           <div class="form-group">
@@ -173,113 +189,181 @@
           </div>
         </div>
 
-        <!-- 三档选择 -->
         <div class="form-group">
           <label>品质档位</label>
           <div class="tier-select">
             <input type="radio" name="tier" value="basic" id="tier-basic" class="tier-option">
             <label for="tier-basic" class="tier-label">
-              <h4>📄 一般</h4>
-              <p>无配图 · 基础排版<br>日常教学用</p>
+              <h4>📄 一般</h4><p>无配图 · 基础排版<br>日常教学用</p>
             </label>
-
             <input type="radio" name="tier" value="standard" id="tier-standard" class="tier-option" checked>
             <label for="tier-standard" class="tier-label">
-              <h4>📊 标准</h4>
-              <p>精选配图 · 精细排版<br>公开课用</p>
+              <h4>📊 标准</h4><p>精选配图 · 精细排版<br>公开课用</p>
             </label>
-
             <input type="radio" name="tier" value="premium" id="tier-premium" class="tier-option">
             <label for="tier-premium" class="tier-label">
-              <h4>🏆 高端</h4>
-              <p>丰富配图 · 醒目配色<br>比赛用</p>
+              <h4>🏆 高端</h4><p>丰富配图 · 醒目配色<br>比赛用</p>
             </label>
           </div>
         </div>
 
-        <button class="btn-generate" id="generateBtn" onclick="generatePPT()">
-          ⚡ 生成 PPT 并下载
+        <button class="btn-generate" onclick="generate()">
+          ⚡ 生成制作清单
         </button>
       </div>
 
-      <!-- 预览区 -->
-      <div class="preview" id="preview">
-        <div class="preview-card">
-          <h3>📋 生成的大纲预览</h3>
-          <div id="slideList"></div>
-        </div>
-      </div>
+      <!-- 清单输出 -->
+      <div class="checklist" id="checklist"></div>
     </div>
   </main>
 
   <footer>
     <div class="container">
       <div class="footer-inner">
-        <div class="footer-brand">
-          <strong>小吴老师 · 微课制作</strong>
-          <p>用AI做更好的课</p>
-        </div>
-        <div class="footer-links">
-          <span>微信 W15842967 · 闲鱼搜索「小吴老师微课」</span>
-        </div>
+        <div class="footer-brand"><strong>小吴老师 · 微课制作</strong><p>用AI做更好的课</p></div>
+        <div class="footer-links"><span>微信 W15842967 · 闲鱼搜索「小吴老师微课」</span></div>
       </div>
       <p class="footer-copy">© 2026 小吴老师</p>
     </div>
   </footer>
 
   <script>
-  // ==================== PPT 生成器 ====================
+  // ==================== PPT 制作清单生成器 ====================
 
-  // ---------- 配色方案 ----------
-  // 每个风格 × 档位的颜色组合。高端档位颜色更鲜明、对比更强。
-  const COLOR_MAP = {
-    '简洁蓝白（数学/科学）': {
-      basic:   { primary: '2F5496', bg: 'FFFFFF', accent: 'D6E4F0', titleColor: '1F3864' },
-      standard:{ primary: '2F5496', bg: 'FFFFFF', accent: 'BDD7EE', titleColor: '1F3864' },
-      premium: { primary: '1B3A6B', bg: 'FFFFFF', accent: '4472C4', titleColor: '0D1F3C' }
+  // ---------- 每个学科的关键词映射（用于生成素材搜索关键词）----------
+  const SUBJECT_KEYWORDS = {
+    '语文': { bg: '古风 水墨 宣纸', icon: '毛笔 书卷 竹简', scene: '诗词 对联 古典', people: '古代人物 诗人' },
+    '数学': { bg: '几何 线条 网格', icon: '数字 公式 图形', scene: '计算 测量 图表', people: '教师 学生' },
+    '英语': { bg: '字母 英伦 国际', icon: 'ABC 单词卡 地球', scene: '校园 旅行 对话', people: '外教 学生 卡通' },
+    '物理': { bg: '星空 电路 力学', icon: '公式 仪器 箭头', scene: '实验 运动 太空', people: '科学家 宇航员' },
+    '化学': { bg: '分子 试管 元素', icon: '烧瓶 元素周期表 原子', scene: '实验室 工厂 环境', people: '科研人员' },
+    '生物': { bg: '细胞 森林 海洋', icon: 'DNA 显微镜 叶子', scene: '生态系统 人体 动物', people: '生物学家' },
+    '历史': { bg: '古建筑 地图 卷轴', icon: '青铜器 钱币 印章', scene: '战争 朝代 文明', people: '历史人物 古人' },
+    '地理': { bg: '地球 等高线 云图', icon: '指南针 经纬度 等高线', scene: '地貌 气候 城市', people: '旅行者' },
+    '道德与法治': { bg: '天平 宪法 国旗', icon: '盾牌 天平 书', scene: '社会 法庭 校园', people: '法官 学生' },
+    '科学': { bg: '星空 微观 实验', icon: '放大镜 齿轮 灯泡', scene: '自然 发明 探索', people: '科学家 发明家' },
+    '信息技术': { bg: '代码 芯片 网络', icon: '电脑 键盘 数据', scene: '编程 互联网 AI', people: '程序员' }
+  };
+
+  // ---------- 每学科知识点模板 ----------
+  const SLIDE_TEMPLATES = {
+    '语文': ['背景导入', '课文朗读', '字词解析', '内容梳理', '重点赏析', '主题提炼', '拓展延伸', '课堂小结'],
+    '数学': ['情境导入', '概念讲解', '例题精讲', '变式练习', '方法归纳', '易错提醒', '综合应用', '课堂小结'],
+    '英语': ['Warm-up 热身', 'New Words 单词', 'Key Sentences 句型', 'Dialogue 对话', 'Grammar 语法', 'Practice 练习', 'Culture 文化', 'Summary 小结'],
+    '物理': ['现象引入', '概念建立', '实验探究', '规律总结', '例题解析', '生活应用', '易错辨析', '课堂小结'],
+    '化学': ['情境引入', '物质性质', '实验演示', '原理分析', '方程式书写', '联系实际', '对比归纳', '课堂小结'],
+    '生物': ['情境导入', '结构认知', '过程分析', '实验观察', '联系生活', '知识网络', '拓展阅读', '课堂小结'],
+    '历史': ['时代背景', '关键事件', '人物聚焦', '史料分析', '影响意义', '中外对比', '古今联系', '课堂小结'],
+    '地理': ['区域定位', '自然特征', '人文特征', '图表分析', '成因探究', '区域对比', '人地关系', '课堂小结'],
+    '道德与法治': ['案例引入', '概念辨析', '法律链接', '情境讨论', '价值引导', '实践行动', '社会延伸', '课堂小结'],
+    '科学': ['现象观察', '问题提出', '实验设计', '数据分析', '结论验证', '生活应用', '科学故事', '课堂小结'],
+    '信息技术': ['情境导入', '知识讲解', '操作演示', '任务实践', '作品展示', '技术原理', '拓展创新', '课堂小结']
+  };
+  const DEFAULT_TEMPLATE = ['封面', '导入环节', '新知讲解 ①', '新知讲解 ②', '新知讲解 ③', '练习互动', '拓展延伸', '课堂小结'];
+
+  // ---------- 各风格的配色方案 ----------
+  const STYLE_COLORS = {
+    '简洁蓝白（数学/科学）':   { name:'蓝白简洁', bg:'#FFFFFF', primary:'#2F5496', accent:'#D6E4F0', text:'#333333', font:'微软雅黑' },
+    '古典雅致（语文/历史）':   { name:'古典雅致', bg:'#FFF8F0', primary:'#8B6914', accent:'#E8D5B7', text:'#4A3620', font:'楷体' },
+    '温暖活泼（小学/英语）':   { name:'温暖活泼', bg:'#FFFBFA', primary:'#E8734A', accent:'#FFD8CC', text:'#4A2820', font:'微软雅黑' },
+    '现代深色（比赛通用）':     { name:'现代深色', bg:'#FFFFFF', primary:'#2D2D2D', accent:'#667EEA', text:'#1A1A1A', font:'思源黑体' }
+  };
+
+  // ---------- 三档的详细特征描述 ----------
+  const TIER_DETAIL = {
+    basic: {
+      label: '一般',
+      icon: '📄',
+      features: ['纯文字排版，不配图', '标题 + 正文直接排列', '不使用辅助装饰', '适合日常教学快速制作'],
+      imageNote: '无配图',
+      decorationNote: '无装饰元素',
+      layoutNote: '左对齐标题，正文紧跟',
+      extras: []
     },
-    '古典雅致（语文/历史）': {
-      basic:   { primary: '8B6914', bg: 'FFF8F0', accent: 'E8D5B7', titleColor: '5C3D0E' },
-      standard:{ primary: '8B6914', bg: 'FFF8F0', accent: 'D4B896', titleColor: '5C3D0E' },
-      premium: { primary: '6B3A0E', bg: 'FFF8F0', accent: 'C4945A', titleColor: '3D1F06' }
+    standard: {
+      label: '标准',
+      icon: '📊',
+      features: ['每页 1-2 张精选配图', '正文分拆为 2-3 个信息块', '使用辅色条+装饰线', '适合公开课 / 示范课'],
+      imageNote: '每页配 1-2 张相关插图/示意图',
+      decorationNote: '左侧辅色细条 + 标题下分隔线',
+      layoutNote: '标题在上，正文左排，配图居右',
+      extras: ['建议每页添加统一的学校/教研组 logo']
     },
-    '温暖活泼（小学/英语）': {
-      basic:   { primary: 'E8734A', bg: 'FFFBFA', accent: 'FFD8CC', titleColor: 'A3402A' },
-      standard:{ primary: 'E8734A', bg: 'FFFBFA', accent: 'FFC4B3', titleColor: 'A3402A' },
-      premium: { primary: 'D4562A', bg: 'FFFBFA', accent: 'FF9470', titleColor: '7A2515' }
-    },
-    '现代深色（比赛通用）': {
-      basic:   { primary: '3D3D3D', bg: 'FFFFFF', accent: 'D0D0D0', titleColor: '1A1A1A' },
-      standard:{ primary: '2D2D2D', bg: 'FFFFFF', accent: 'B0B0B0', titleColor: '1A1A1A' },
-      premium: { primary: '1A1A2E', bg: 'FFFFFF', accent: '667EEA', titleColor: '0D0D1A' }
+    premium: {
+      label: '高端',
+      icon: '🏆',
+      features: ['每页 2-3 张高质量配图', '正文分拆为 4-5 个信息块', '主色+辅色双色条，转角徽章', '适合教学比赛 / 省级评选'],
+      imageNote: '每页配 2-3 张高质量照片/插图/信息图',
+      decorationNote: '左侧双色粗条 + 顶部横贯色条 + 标题下双线分隔 + 底部装饰条',
+      layoutNote: '标题突出，正文左右分栏，配图网格化排列',
+      extras: ['页码使用带底色的圆角徽章', '封面页使用全幅背景图', '尾页加联系方式+二维码']
     }
   };
 
-  // ---------- 每种风格的理论色名（用于文字描述） ----------
-  const STYLE_COLOR_NAMES = {
-    '简洁蓝白（数学/科学）': { basic: '淡蓝底+深蓝字', standard: '湖蓝辅色+深蓝标题', premium: '宝蓝强调+藏青标题，对比鲜明' },
-    '古典雅致（语文/历史）': { basic: '米白底+棕黄字', standard: '驼色辅色+深棕标题', premium: '金棕强调+深褐标题，古韵突出' },
-    '温暖活泼（小学/英语）': { basic: '暖白底+橙红字', standard: '浅橙辅色+深橙标题', premium: '亮橙强调+朱红标题，活力醒目' },
-    '现代深色（比赛通用）': { basic: '白底+灰字', standard: '浅灰辅色+深灰标题', premium: '蓝紫强调+墨黑标题，高端冷感' }
-  };
+  // ---------- 为每页生成画面建议 ----------
+  function getVisualSuggestion(subject, templateItem, tier, slideNum, totalSlides) {
+    const kw = SUBJECT_KEYWORDS[subject] || SUBJECT_KEYWORDS['科学'];
+    const tierLevel = { basic: 0, standard: 1, premium: 2 };
 
-  // ---------- 各学科的知识点拆分模板（让每页内容更贴合学科） ----------
-  const SLIDE_TEMPLATES = {
-    '语文': ['背景导入：作者/时代/文体简介', '课文朗读：重点段落原文', '字词解析：生字注音+释义', '内容梳理：段落大意+结构图', '重点赏析：修辞手法/写作特点', '主题提炼：中心思想', '拓展延伸：相关篇目/写作练习', '课堂小结'],
-    '数学': ['情境导入：生活中的数学问题', '概念讲解：定义+公式', '例题精讲：典型题分步解析', '变式练习：换个条件再练', '方法归纳：解题思路总结', '易错提醒：常见错误对比', '综合应用：实际场景题', '课堂小结'],
-    '英语': ['Warm-up: 情景对话/歌曲导入', 'New Words: 单词+配图+发音', 'Key Sentences: 句型展示+替换练习', 'Dialogue: 对话分角色', 'Grammar: 语法点归纳', 'Practice: 听说读写练习', 'Culture: 文化小知识', 'Summary'],
-    '物理': ['现象引入：实验/生活场景', '概念建立：物理量+公式', '实验探究：步骤+数据+结论', '规律总结：定律表述', '例题解析：计算+思路', '生活应用：技术/自然现象', '易错辨析：常见误解', '课堂小结'],
-    '化学': ['情境引入：生活/工业场景', '物质性质：物理+化学性质', '实验演示：装置+现象+方程式', '原理分析：微观解释', '方程式书写：配平技巧', '联系实际：用途+安全', '对比归纳：同类物质比较', '课堂小结'],
-    '生物': ['情境导入：生命现象/图片', '结构认知：形态+功能', '过程分析：生理过程图解', '实验观察：步骤+结果', '联系生活：健康/环境', '知识网络：概念图', '拓展阅读：前沿科学', '课堂小结'],
-    '历史': ['时间轴导入：时代背景', '关键事件：起因+经过+结果', '人物聚焦：主要人物+贡献', '史料分析：文献/图片解读', '影响意义：历史评价', '中外对比：同时期世界', '古今联系：对今天的影响', '课堂小结'],
-    '地理': ['地图导入：区域定位', '自然特征：地形+气候+水文', '人文特征：人口+经济+城市', '图表分析：数据图/分布图', '成因探究：自然/人文因素', '区域对比：不同地区比较', '人地关系：资源+环境', '课堂小结']
-  };
+    if (slideNum === 1) {
+      // 封面
+      if (tier === 'premium') return '全幅主题背景图 + 半透明遮罩 + 课题大字居中 + 学科/年级副标题';
+      if (tier === 'standard') return '主题色渐变背景 + 课题大标题 + 学科年级信息 + 小装饰图标';
+      return '纯色背景 + 课题标题 + 学科年级，不配图';
+    }
+    if (slideNum === totalSlides) {
+      if (tier === 'premium') return '总结性信息图 + 核心知识点回顾卡片 + 感谢语 + 联系方式';
+      if (tier === 'standard') return '知识点要点总结 + 简单装饰边框';
+      return '文字总结，无配图';
+    }
 
-  const DEFAULT_TEMPLATE = ['封面：课题+学科+年级', '导入：情境引入', '新知讲解1', '新知讲解2', '新知讲解3', '练习/互动', '拓展延伸', '课堂小结'];
+    // 中间页：按学科 + 模板项给画面建议
+    const visualMap = {
+      '导入': '情境照片/生活场景图',
+      '背景导入': '时代背景图/相关历史照片',
+      '情境导入': '生活场景照片/实物图',
+      '现象引入': '实验照片/自然现象图',
+      '概念讲解': '概念示意图/思维导图',
+      '概念建立': '定义卡片+示意图',
+      '字词解析': '生字大图+笔顺动画截图',
+      '内容梳理': '段落结构思维导图',
+      '例题精讲': '题目截图+分步解题图',
+      '实验探究': '实验装置图+步骤流程图',
+      '实验演示': '实验装置图+现象对比图',
+      '练习': '练习题卡片',
+      '拓展延伸': '相关书籍/视频封面/拓展阅读图',
+    };
 
-  // ---------- 核心：生成 PPT ----------
-  function generatePPT() {
-    // 1. 读取用户输入的参数
+    for (const [key, val] of Object.entries(visualMap)) {
+      if (templateItem.includes(key)) return val;
+    }
+
+    if (tier === 'premium') return '相关高清摄影/手绘插图/动态示意图';
+    if (tier === 'standard') return '相关插图/图标/示意图';
+    return '纯文字排版';
+  }
+
+  // ---------- 生成素材搜索关键词 ----------
+  function getMaterialKeywords(subject, templateItem, tier) {
+    const kw = SUBJECT_KEYWORDS[subject] || SUBJECT_KEYWORDS['科学'];
+    const base = [];
+    if (templateItem.includes('导入') || templateItem.includes('引入')) base.push(kw.scene, kw.bg);
+    else if (templateItem.includes('概念') || templateItem.includes('讲解')) base.push(kw.icon, '示意');
+    else if (templateItem.includes('实验')) base.push('实验', '步骤');
+    else if (templateItem.includes('练习') || templateItem.includes('互动')) base.push('互动', '卡片');
+    else if (templateItem.includes('拓展') || templateItem.includes('延伸')) base.push('阅读', '拓展');
+    else if (templateItem.includes('小结') || templateItem.includes('总结')) base.push('总结', '回顾');
+    else base.push(kw.bg, kw.icon);
+
+    // 高端档加更多关键词
+    if (tier === 'premium') base.push('高清', '商用');
+    if (tier !== 'basic') base.push('免抠');
+
+    return [...new Set(base)].slice(0, 4).join(' · ');
+  }
+
+  // ---------- 主函数：生成清单 ----------
+  function generate() {
     const subject    = document.getElementById('subject').value;
     const grade      = document.getElementById('grade').value;
     const topic      = document.getElementById('topic').value || '未命名课题';
@@ -287,267 +371,166 @@
     const style      = document.getElementById('style').value;
     const tier       = document.querySelector('input[name="tier"]:checked').value;
 
-    // 2. 获取该风格+档位的配色
-    const colors = COLOR_MAP[style][tier];
-    const colorName = STYLE_COLOR_NAMES[style][tier];
-
-    // 3. 根据学科匹配知识点模板,没有专用模板就用通用模板
+    const colors   = STYLE_COLORS[style];
+    const kw       = SUBJECT_KEYWORDS[subject] || SUBJECT_KEYWORDS['科学'];
     const template = SLIDE_TEMPLATES[subject] || DEFAULT_TEMPLATE;
+    const tierInfo = TIER_DETAIL[tier];
 
-    // 4. 生成幻灯片大纲（文字预览用）
-    const slides = buildSlideOutline(template, topic, subject, grade, slideCount);
-
-    // 5. 显示预览
-    showPreview(slides, tier, subject, style, colorName);
-
-    // 6. 生成并下载 .pptx 文件
-    downloadPPTX(slides, topic, grade, tier, colors);
-  }
-
-  // ---------- 构建幻灯片大纲 ----------
-  function buildSlideOutline(template, topic, subject, grade, slideCount) {
+    // 生成每一页的数据
     const slides = [];
-
-    // 把模板内容循环填充到指定页数
     for (let i = 0; i < slideCount; i++) {
-      // 循环使用模板中的知识点标题
-      const templateItem = template[i % template.length];
-      const slideNum = i + 1;
-
-      // 根据档位生成不同的内容深度
-      let title = templateItem;
-      let content = '';
+      const num = i + 1;
+      const tpl = template[i % template.length];
+      let title, content;
 
       if (i === 0) {
         title = topic;
-        content = `${subject} · ${grade}`;
+        content = `封面页 · ${subject}${grade}`;
       } else if (i === slideCount - 1) {
         title = '课堂小结';
-        content = '回顾本课核心知识点，布置作业';
+        content = '回顾本课核心知识点，梳理知识框架，布置课后作业';
       } else {
-        // 用模板标题 + 学科语境填充
-        title = templateItem.replace('导入', topic + ' 导入')
-                          .replace('新知讲解', topic + ' 知识点')
-                          .replace('练习/互动', '练习与互动')
-                          .replace('拓展延伸', '拓展延伸：' + topic + ' 相关');
-        content = `本节要点：${templateItem}，结合 ${grade} 学情设计`;
+        title = tpl;
+        content = generateContent(tpl, topic, grade, subject, tier, num);
       }
 
-      slides.push({ num: slideNum, title, content });
+      slides.push({
+        num, title, content,
+        visual: getVisualSuggestion(subject, tpl, tier, num, slideCount),
+        materials: getMaterialKeywords(subject, tpl, tier),
+        colorTip: getColorTip(style, tier, num, slideCount),
+        fontTip: tier === 'premium' ? `${colors.font}，标题加粗 ${tier === 'premium' ? '44' : '36'}pt，正文 ${tier === 'premium' ? '24' : '20'}pt` : null
+      });
     }
 
-    return slides;
+    render(slides, { subject, grade, topic, style, tier, colors, tierInfo });
   }
 
-  // ---------- 显示大纲预览 ----------
-  function showPreview(slides, tier, subject, style, colorName) {
-    const preview = document.getElementById('preview');
-    const slideList = document.getElementById('slideList');
+  // ---------- 为每页生成内容描述 ----------
+  function generateContent(tpl, topic, grade, subject, tier, num) {
+    const base = `${grade} · ${tpl}环节`;
+    // 标准+高端加更详细的教学描述
+    if (tier === 'premium') {
+      return `【教学目标】通过${tpl}环节，引导学生掌握${topic}相关知识与技能。\n【设计思路】结合${grade}学情，以${num % 2 === 0 ? '学生自主探究' : '教师引导启发'}为主线推进。\n【时间分配】建议本环节用时 ${Math.floor(40/slideCount)} 分钟。`;
+    }
+    if (tier === 'standard') {
+      return `本节课${tpl}环节，结合${grade}教学大纲要求设计。建议配合板书/多媒体展示，帮助学生理解${topic}核心概念。`;
+    }
+    return `${base}。教师讲解为主，学生听讲+笔记。`;
+  }
 
-    const tierNames = { basic: '一般', standard: '标准', premium: '高端' };
-    const tierFeatures = {
-      basic: '无配图（纯文字排版）',
-      standard: '精选配图 + 精细排版',
-      premium: '丰富配图 + 醒目配色，适合比赛'
+  // ---------- 每页配色提示 ----------
+  function getColorTip(style, tier, num, total) {
+    if (tier === 'basic') return null;
+    const tips = {
+      '简洁蓝白（数学/科学）': { standard: '标题 #2F5496 深蓝 · 正文 #333 深灰 · 辅色条 #D6E4F0 淡蓝', premium: '标题 #1B3A6B 藏青 · 正文 #222 · 强调色条 #4472C4 宝蓝 · 装饰 #BDD7EE' },
+      '古典雅致（语文/历史）': { standard: '标题 #8B6914 深棕 · 正文 #4A3620 · 辅色条 #E8D5B7 驼色', premium: '标题 #6B3A0E 深褐 · 正文 #3D1F06 · 强调色条 #C4945A 金棕 · 背景 #FFF8F0 米白' },
+      '温暖活泼（小学/英语）': { standard: '标题 #E8734A 暖橙 · 正文 #4A2820 · 辅色条 #FFD8CC 浅橙', premium: '标题 #D4562A 朱红 · 正文 #4A2020 · 强调色条 #FF9470 亮橙 · 背景 #FFFBFA' },
+      '现代深色（比赛通用）': { standard: '标题 #2D2D2D 深灰 · 正文 #333 · 辅色条 #B0B0B0 浅灰', premium: '标题 #1A1A2E 墨黑 · 正文 #222 · 强调色条 #667EEA 蓝紫 · 装饰 #D0D0FF' }
     };
+    return tips[style]?.[tier] || null;
+  }
 
-    let html = `
-      <p style="margin-bottom:12px;font-size:0.9em;">
-        📐 风格：<strong>${style}</strong> &nbsp;|&nbsp;
-        🎨 配色：<strong>${colorName}</strong> &nbsp;|&nbsp;
-        🏷️ 档位：<strong>${tierNames[tier]} · ${tierFeatures[tier]}</strong>
-      </p>
-    `;
+  // ---------- 渲染清单到页面 ----------
+  function render(slides, ctx) {
+    const { subject, grade, topic, style, tier, colors, tierInfo } = ctx;
+    const checklist = document.getElementById('checklist');
+    const tierCSS = tier; // 'basic' | 'standard' | 'premium'
 
+    let html = '';
+
+    // 清单头部
+    html += `
+    <div class="checklist-header">
+      <h3>📋 ${topic} · PPT 制作清单</h3>
+      <div class="meta-row">
+        <span>📐 <strong>${subject} · ${grade}</strong></span>
+        <span>🎨 风格：<strong>${style}</strong></span>
+        <span>📑 共 <strong>${slides.length} 页</strong></span>
+        <span>🏷️ 档位：<strong>${tierInfo.label} ${tierInfo.icon}</strong></span>
+      </div>
+
+      <div class="info-bar">
+        <span>🖼️ 配图策略：<strong>${tierInfo.imageNote}</strong></span>
+        <span>🎀 装饰方案：<strong>${tierInfo.decorationNote}</strong></span>
+        <span>📐 排版规则：<strong>${tierInfo.layoutNote}</strong></span>
+        <span>🎨 主色：<strong>${colors.primary}</strong> · 辅色：<strong>${colors.accent}</strong></span>
+      </div>
+    </div>`;
+
+    // 每一页清单
     slides.forEach(s => {
       html += `
-        <div class="slide-item">
-          <span class="slide-num">#${s.num}</span> ${s.title}
-          <span style="color:var(--text-light);font-size:0.85em;">— ${s.content}</span>
-        </div>
-      `;
+      <div class="slide-card ${tierCSS}">
+        <span class="slide-num">第 ${s.num} 页</span>
+        <div class="slide-title">${s.title}</div>
+        <div class="slide-content">${s.content.replace(/\n/g, '<br>')}</div>
+
+        <div class="slide-detail ${tier === 'basic' ? 'full' : ''}">
+          <div class="detail-item">
+            <span class="dt">🖼️ 画面建议</span>
+            <span class="dd">${s.visual}</span>
+          </div>
+          <div class="detail-item">
+            <span class="dt">🔍 素材搜词</span>
+            <span class="dd">
+              ${s.materials.split(' · ').map(k => `<span class="material-tag">${k}</span>`).join(' ')}
+            </span>
+          </div>`;
+
+      if (s.colorTip) {
+        html += `
+          <div class="detail-item">
+            <span class="dt">🎨 配色方案</span>
+            <span class="dd">${s.colorTip}</span>
+          </div>`;
+      }
+
+      if (s.fontTip) {
+        html += `
+          <div class="detail-item">
+            <span class="dt">✍️ 字体字号</span>
+            <span class="dd">${s.fontTip}</span>
+          </div>`;
+      }
+
+      html += `</div></div>`;
     });
 
-    slideList.innerHTML = html;
-    preview.classList.add('show');
+    // 底部总结
+    html += `
+    <div class="checklist-footer">
+      <h4>📝 制作前准备清单</h4>
+      <ul style="margin-left:20px;font-size:0.9em;">
+        <li>素材网站：觅元素（mii.com）、千库网（58pic.com）、Pixabay</li>
+        <li>字体安装：${colors.font}${tier === 'premium' ? ' + 思源宋体（封面标题用）' : ''}</li>
+        <li>软件：PowerPoint / WPS，${tier === 'premium' ? '建议用 Keynote 或 PowerPoint 365（动画更流畅）' : '任意版本均可'}</li>
+        <li>画面比例：16:9（${tier === 'premium' ? '建议同时导出 4:3 备选' : '标准宽屏'})</li>
+        ${tierInfo.extras.map(e => `<li>${e}</li>`).join('')}
+      </ul>
+    </div>`;
 
-    // 滚动到预览区
-    preview.scrollIntoView({ behavior: 'smooth' });
+    // 按钮
+    html += `
+    <div class="btn-row">
+      <button class="btn-copy" onclick="copyChecklist()">📋 复制清单文本</button>
+      <button class="btn-print" onclick="window.print()">🖨️ 打印清单</button>
+    </div>`;
+
+    checklist.innerHTML = html;
+    checklist.classList.add('show');
+    checklist.scrollIntoView({ behavior: 'smooth' });
   }
 
-  // ---------- 生成 .pptx 并触发下载 ----------
-  function downloadPPTX(slides, topic, grade, tier, colors) {
-    const pptx = new PptxGenJS();
-    pptx.layout = 'LAYOUT_WIDE';
-    pptx.defineLayout({ name:'WIDE', width:'13.333', height:'7.5' });
-
-    // 三个档位的排版参数 —— 差距拉大，一眼看出不同
-    const tierConfig = {
-      basic:   { titleSize: 28, bodySize: 16, margin: 0.8, accentWidth: 0,     accentBar: false, separator: false, topBar: false, contentSections: 1 },
-      standard:{ titleSize: 36, bodySize: 20, margin: 0.6, accentWidth: 0.14,  accentBar: true,  separator: true,  topBar: true,  contentSections: 2 },
-      premium: { titleSize: 44, bodySize: 24, margin: 0.6, accentWidth: 0.22,  accentBar: true,  separator: true,  topBar: true,  contentSections: 3 }
-    };
-    const cfg = tierConfig[tier];
-
-    // 根据档位生成不同深度的内容描述
-    const sectionLabels = {
-      basic: ['教学内容'],
-      standard: ['教学目标', '教学提示'],
-      premium: ['教学目标', '教学提示', '互动设计']
-    };
-    const sectionContents = {
-      basic: [slide => slide.content],
-      standard: [
-        slide => slide.content,
-        slide => `结合${grade}学生认知水平，本环节建议配合板书与多媒体素材展示，帮助学生直观理解。`
-      ],
-      premium: [
-        slide => slide.content,
-        slide => `结合${grade}学情，本环节建议使用视频/动画辅助，配合${slide.num > 3 ? '小组讨论' : '师生问答'}加深理解。`,
-        slide => `🎯 互动建议：${slide.num % 2 === 0 ? '随机点名提问，检验理解度' : '小组内互相复述本知识点，选代表发言'}`
-      ]
-    };
-
-    // 遍历每一页
-    slides.forEach(slide => {
-      const s = pptx.addSlide();
-      const labels = sectionLabels[tier];
-      const contents = sectionContents[tier];
-
-      // === 背景 ===
-      s.background = { color: colors.bg };
-
-      // === 左侧强调色条 ===
-      if (cfg.accentBar) {
-        // 高端：渐变效果（用双色块模拟）
-        if (tier === 'premium') {
-          s.addShape(pptx.ShapeType.rect, {
-            x: 0, y: 0, w: cfg.accentWidth + 0.04, h: '100%',
-            fill: { color: colors.primary }
-          });
-          s.addShape(pptx.ShapeType.rect, {
-            x: 0, y: 0, w: cfg.accentWidth, h: '100%',
-            fill: { color: colors.accent }
-          });
-        } else {
-          s.addShape(pptx.ShapeType.rect, {
-            x: 0, y: 0, w: cfg.accentWidth, h: '100%',
-            fill: { color: colors.accent }
-          });
-        }
-      }
-
-      // === 顶部导航条（高端专属：整条横贯） ===
-      if (tier === 'premium') {
-        s.addShape(pptx.ShapeType.rect, {
-          x: 0, y: 0, w: '100%', h: 0.08,
-          fill: { color: colors.accent }
-        });
-      }
-
-      // === 顶部小装饰块 ===
-      if (cfg.topBar) {
-        const barX = cfg.accentBar ? cfg.accentWidth + 0.25 : 0.6;
-        s.addShape(pptx.ShapeType.rect, {
-          x: barX, y: 0.35, w: tier === 'premium' ? 1.2 : 0.6, h: tier === 'premium' ? 0.08 : 0.06,
-          fill: { color: colors.primary }
-        });
-      }
-
-      // === 页码 ===
-      // 高端：页码有底色圆角标签
-      if (tier === 'premium') {
-        s.addShape(pptx.ShapeType.roundRect, {
-          x: 11.8, y: 6.8, w: 0.55, h: 0.32,
-          fill: { color: colors.primary }, rectRadius: 0.06
-        });
-        s.addText(`${slide.num}`, {
-          x: 11.8, y: 6.8, w: 0.55, h: 0.32,
-          fontSize: 9, color: 'FFFFFF', align: 'center', fontFace: 'Microsoft YaHei'
-        });
-      } else {
-        s.addText(`${slide.num}`, {
-          x: 12.0, y: 6.85, w: 0.8, h: 0.3,
-          fontSize: 9, color: '999999', align: 'right', fontFace: 'Microsoft YaHei'
-        });
-      }
-
-      // === 标题 ===
-      const titleX = cfg.accentBar ? cfg.accentWidth + 0.3 : 0.8;
-      s.addText(slide.title, {
-        x: titleX, y: 0.55, w: 12 - titleX, h: tier === 'premium' ? 1.1 : 0.9,
-        fontSize: cfg.titleSize, bold: true,
-        color: colors.titleColor, fontFace: 'Microsoft YaHei'
-      });
-
-      // === 分隔线 ===
-      if (cfg.separator) {
-        if (tier === 'premium') {
-          // 高端：双层分隔，主色 + 辅色
-          s.addShape(pptx.ShapeType.rect, {
-            x: titleX, y: 1.55, w: 4.0, h: 0.05,
-            fill: { color: colors.accent }
-          });
-          s.addShape(pptx.ShapeType.rect, {
-            x: titleX, y: 1.63, w: 2.2, h: 0.04,
-            fill: { color: colors.primary }
-          });
-        } else {
-          // 标准：单线分隔
-          s.addShape(pptx.ShapeType.rect, {
-            x: titleX, y: 1.5, w: 2.5, h: 0.04,
-            fill: { color: colors.accent }
-          });
-        }
-      }
-
-      // === 正文：每个档位的内容板块数量不同 ===
-      let contentY = cfg.separator ? 1.85 : 1.5;
-      const contentX = cfg.accentBar ? cfg.accentWidth + 0.3 : 0.8;
-      const contentW = 12.5 - contentX;
-
-      labels.forEach((label, i) => {
-        const block = [];
-        const sectionColor = tier === 'premium' ? colors.primary : (tier === 'standard' ? colors.primary : '666666');
-
-        // 板块小标题
-        block.push({ text: `▎${label}`, options: { bold: true, fontSize: cfg.bodySize, color: sectionColor, breakLine: true } });
-        // 板块内容
-        block.push({ text: contents[i](slide), options: { fontSize: cfg.bodySize - 2, color: tier === 'basic' ? '555555' : '444444', breakLine: true } });
-
-        // 板块间距
-        if (i < labels.length - 1) {
-          block.push({ text: '', options: { fontSize: 6, breakLine: true } });
-        }
-
-        s.addText(block, {
-          x: contentX, y: contentY, w: contentW, h: 1.2,
-          valign: 'top', fontFace: 'Microsoft YaHei', lineSpacingMultiple: 1.3
-        });
-
-        contentY += 1.25; // 每个板块往下移
-      });
-
-      // === 底部装饰 ===
-      if (tier === 'premium') {
-        // 高端底部装饰条
-        s.addShape(pptx.ShapeType.rect, {
-          x: 0, y: 7.35, w: '100%', h: 0.04,
-          fill: { color: colors.accent }
-        });
-      }
-
-      // === 底部水印 ===
-      s.addText('小吴老师 · 微课制作', {
-        x: 0, y: tier === 'premium' ? 7.4 : 7.15, w: 13.333, h: 0.25,
-        fontSize: 7, color: 'CCCCCC', align: 'center', fontFace: 'Microsoft YaHei'
-      });
+  // ---------- 复制清单为纯文本 ----------
+  function copyChecklist() {
+    const el = document.getElementById('checklist');
+    const text = el.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      alert('✅ 清单已复制到剪贴板，可以粘贴到记事本 / 微信 / Word 里使用');
+    }).catch(() => {
+      alert('复制失败，请手动选中文字 Ctrl+C');
     });
-
-    // 触发下载
-    const tierLabel = { basic: '一般', standard: '标准', premium: '高端' };
-    const fileName = `${topic}_${grade}${subject}_${tierLabel[tier]}档.pptx`;
-    pptx.writeFile({ fileName });
   }
   </script>
 
